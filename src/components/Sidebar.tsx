@@ -11,6 +11,7 @@ interface SidebarProps {
   onSettingsClick: () => void;
   isOpen: boolean;
   onClose: () => void;
+  provider: 'openai' | 'gemini';
   apiConfigured: boolean;
 }
 
@@ -23,6 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSettingsClick,
   isOpen,
   onClose,
+  provider,
   apiConfigured,
 }) => {
   return (
@@ -130,7 +132,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   Moteur IA
                 </span>
                 <span className="text-[10px] font-semibold text-foreground">
-                  {apiConfigured ? 'Gemini Pro Actif' : 'Moteur Local'}
+                  {apiConfigured
+                    ? (provider === 'openai' ? 'OpenAI Actif' : 'Gemini Actif')
+                    : 'Non configuré'}
                 </span>
               </div>
             </div>

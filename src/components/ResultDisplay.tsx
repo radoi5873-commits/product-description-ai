@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Copy, Check, Download, RotateCcw, 
   CheckCircle2, ArrowRight, Globe, FileText,
-  Heading, TextQuote, AlignLeft, ListChecks, MousePointerClick
+  Heading, AlignLeft, ListChecks, MousePointerClick, Sparkles
 } from 'lucide-react';
 import type { GenerationResult } from '../types';
 
@@ -12,6 +12,7 @@ interface ResultDisplayProps {
   isNewGeneration: boolean;
 }
 
+// 1. Machine à écrire animée
 const TypewrittenText: React.FC<{ text: string; speed?: number; active: boolean }> = ({ 
   text, 
   speed = 3, 
@@ -41,12 +42,72 @@ const TypewrittenText: React.FC<{ text: string; speed?: number; active: boolean 
   return <span className="whitespace-pre-line">{displayedText}</span>;
 };
 
+// 2. Composant Carte Individuel Glassmorphism Premium
+interface ResultCardProps {
+  title: string;
+  icon: React.ReactNode;
+  content: React.ReactNode;
+  textToCopy: string;
+  className?: string;
+  delayClass?: string;
+}
+
+const ResultCard: React.FC<ResultCardProps> = ({
+  title,
+  icon,
+  content,
+  textToCopy,
+  className = '',
+  delayClass = ''
+}) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(textToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className={`result-glass-card ${className} ${delayClass}`}>
+      <div className="result-card-header-premium">
+        <span className="result-card-title-premium">
+          <div className="card-icon-wrapper-premium">
+            {icon}
+          </div>
+          {title}
+        </span>
+        <button
+          onClick={handleCopy}
+          className={`card-copy-btn-premium ${copied ? 'copied' : ''}`}
+          title={`Copier ${title}`}
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-[#10b981]" />
+              <span>Copié !</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5" />
+              <span>Copier</span>
+            </>
+          )}
+        </button>
+      </div>
+      <div className="result-card-body-premium">
+        {content}
+      </div>
+    </div>
+  );
+};
+
+// 3. Rendu Principal des Résultats
 export const ResultDisplay: React.FC<ResultDisplayProps> = ({ 
   result, 
   onRegenerate, 
   isNewGeneration 
 }) => {
-  const [copiedSection, setCopiedSection] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
 
   if (!result) {
@@ -86,12 +147,6 @@ ${benefits.map((b) => `- ${b}`).join('\n')}
 `;
   };
 
-  const handleCopy = (text: string, sectionId: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedSection(sectionId);
-    setTimeout(() => setCopiedSection(null), 2000);
-  };
-
   const handleCopyAll = () => {
     navigator.clipboard.writeText(getMarkdownContent());
     setCopiedAll(true);
@@ -125,6 +180,7 @@ ${benefits.map((b) => `- ${b}`).join('\n')}
           <button
             onClick={onRegenerate}
             className="btn-saas btn-saas-secondary py-1.5 px-3 text-xs"
+            style={{ width: 'auto' }}
             title="Régénérer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -134,6 +190,7 @@ ${benefits.map((b) => `- ${b}`).join('\n')}
           <button
             onClick={handleExport}
             className="btn-saas btn-saas-secondary py-1.5 px-3 text-xs"
+            style={{ width: 'auto' }}
             title="Exporter en Markdown"
           >
             <Download className="w-3.5 h-3.5" />
@@ -142,238 +199,142 @@ ${benefits.map((b) => `- ${b}`).join('\n')}
           
           <button
             onClick={handleCopyAll}
-            className="btn-saas btn-saas-primary py-1.5 px-4 text-xs"
+            className={`btn-saas ${copiedAll ? 'btn-saas-secondary copied' : 'btn-saas-primary'} py-1.5 px-4 text-xs`}
+            style={{ width: 'auto', backgroundColor: copiedAll ? 'rgba(16, 185, 129, 0.08)' : '', borderColor: copiedAll ? 'rgba(16, 185, 129, 0.2)' : '' }}
             title="Copier toute la fiche"
           >
             {copiedAll ? (
               <>
-                <Check className="w-3.5 h-3.5 text-inverse" />
-                Copié !
+                <Check className="w-3.5 h-3.5 text-[#10b981]" />
+                <span style={{ color: '#10b981' }}>Copié !</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5 text-inverse" />
-                Copier tout
+                <span>Copier tout</span>
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* Grille de fiches produits */}
-      <div className="bento-grid">
+      {/* Grille flexible de fiches produits */}
+      <div className="results-grid-premium">
+        
         {/* 1. Titre Produit */}
-        <div className="saas-card bento-col-2 animate-slide-up">
-          <div className="result-card-header">
-            <span className="result-card-title">
-              <Heading className="w-4 h-4" />
-              Titre du Produit
-            </span>
-            <button
-              onClick={() => handleCopy(title, 'title')}
-              className="result-copy-btn"
-              title="Copier le titre"
-            >
-              {copiedSection === 'title' ? (
-                <>
-                  <Check className="w-3 h-3 text-[#FF6B00]" />
-                  Copié
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3" />
-                  Copier
-                </>
-              )}
-            </button>
-          </div>
-          <h3 className="text-md font-bold text-foreground">
-            <TypewrittenText text={title} active={isNewGeneration} />
-          </h3>
-        </div>
+        <ResultCard
+          title="Titre du Produit"
+          icon={<Heading className="w-4 h-4" />}
+          textToCopy={title}
+          className="results-full-width"
+          delayClass="delay-100"
+          content={
+            <h3 className="result-card-content-title">
+              <TypewrittenText text={title} active={isNewGeneration} />
+            </h3>
+          }
+        />
 
         {/* 2. Description Courte */}
-        <div className="saas-card bento-col-2 animate-slide-up delay-100">
-          <div className="result-card-header">
-            <span className="result-card-title">
-              <TextQuote className="w-4 h-4" />
-              Description Courte
-            </span>
-            <button
-              onClick={() => handleCopy(shortDescription, 'short')}
-              className="result-copy-btn"
-              title="Copier la description courte"
-            >
-              {copiedSection === 'short' ? (
-                <>
-                  <Check className="w-3 h-3 text-[#FF6B00]" />
-                  Copié
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3" />
-                  Copier
-                </>
-              )}
-            </button>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-            <TypewrittenText text={shortDescription} active={isNewGeneration} />
-          </p>
-        </div>
+        <ResultCard
+          title="Description Courte"
+          icon={<Sparkles className="w-4 h-4" />}
+          textToCopy={shortDescription}
+          className="results-full-width"
+          delayClass="delay-150"
+          content={
+            <p className="result-card-content-short">
+              <TypewrittenText text={shortDescription} active={isNewGeneration} />
+            </p>
+          }
+        />
 
         {/* 3. Description Longue */}
-        <div className="saas-card bento-col-2 animate-slide-up delay-150">
-          <div className="result-card-header">
-            <span className="result-card-title">
-              <AlignLeft className="w-4 h-4" />
-              Description Longue
-            </span>
-            <button
-              onClick={() => handleCopy(longDescription, 'long')}
-              className="result-copy-btn"
-              title="Copier la description longue"
-            >
-              {copiedSection === 'long' ? (
-                <>
-                  <Check className="w-3 h-3 text-[#FF6B00]" />
-                  Copié
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3" />
-                  Copier
-                </>
-              )}
-            </button>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-            <TypewrittenText text={longDescription} active={isNewGeneration} />
-          </p>
-        </div>
+        <ResultCard
+          title="Description Longue"
+          icon={<AlignLeft className="w-4 h-4" />}
+          textToCopy={longDescription}
+          className="results-full-width"
+          delayClass="delay-200"
+          content={
+            <p className="result-card-content-long">
+              <TypewrittenText text={longDescription} active={isNewGeneration} />
+            </p>
+          }
+        />
 
         {/* 4. Avantages */}
-        <div className="saas-card bento-row-2 animate-slide-up delay-200">
-          <div className="result-card-header">
-            <span className="result-card-title">
-              <ListChecks className="w-4 h-4" />
-              5 Avantages Clés
-            </span>
-            <button
-              onClick={() => handleCopy(benefits.join('\n'), 'benefits')}
-              className="result-copy-btn"
-              title="Copier les avantages"
-            >
-              {copiedSection === 'benefits' ? (
-                <>
-                  <Check className="w-3 h-3 text-[#FF6B00]" />
-                  Copié
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3" />
-                  Copier
-                </>
-              )}
-            </button>
-          </div>
-          <ul className="space-y-3">
-            {benefits.map((benefit, idx) => {
-              const [titleText, descText] = benefit.includes(':') 
-                ? benefit.split(':', 2) 
-                : [benefit, ''];
+        <ResultCard
+          title="Avantages Clés"
+          icon={<ListChecks className="w-4 h-4" />}
+          textToCopy={benefits.join('\n')}
+          className="results-full-width"
+          delayClass="delay-250"
+          content={
+            <ul className="space-y-3">
+              {benefits.map((benefit, idx) => {
+                const [titleText, descText] = benefit.includes(':') 
+                  ? benefit.split(':', 2) 
+                  : [benefit, ''];
 
-              return (
-                <li key={idx} className="text-xs text-muted-foreground flex items-start gap-3">
-                  <div className="w-5 h-5 rounded bg-orange-500/10 flex items-center justify-center text-[#FF6B00] shrink-0 mt-0.5 border border-orange-500/10">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="leading-relaxed">
-                    {descText ? (
-                      <>
-                        <strong className="text-foreground font-semibold">
-                          <TypewrittenText text={titleText.trim() + ' : '} active={isNewGeneration} />
-                        </strong>
-                        <TypewrittenText text={descText.trim()} active={isNewGeneration} />
-                      </>
-                    ) : (
-                      <TypewrittenText text={benefit} active={isNewGeneration} />
-                    )}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                return (
+                  <li key={idx} className="text-xs text-muted-foreground flex items-start gap-3">
+                    <div className="w-5 h-5 rounded bg-orange-500/10 flex items-center justify-center text-[#FF6B00] shrink-0 mt-0.5 border border-orange-500/10">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="leading-relaxed">
+                      {descText ? (
+                        <>
+                          <strong className="text-foreground font-semibold">
+                            <TypewrittenText text={titleText.trim() + ' : '} active={isNewGeneration} />
+                          </strong>
+                          <TypewrittenText text={descText.trim()} active={isNewGeneration} />
+                        </>
+                      ) : (
+                        <TypewrittenText text={benefit} active={isNewGeneration} />
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          }
+        />
 
-        {/* 5. Call To Action */}
-        <div className="saas-card animate-slide-up delay-250 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="result-card-title mb-0.5">
-              <MousePointerClick className="w-4 h-4" />
-              Appel à l'Action (CTA)
-            </span>
-            <div className="text-foreground font-bold text-sm">
+        {/* 5. Appel à l'Action */}
+        <ResultCard
+          title="Appel à l'Action (CTA)"
+          icon={<MousePointerClick className="w-4 h-4" />}
+          textToCopy={cta}
+          delayClass="delay-300"
+          content={
+            <div className="result-card-content-cta">
               <TypewrittenText text={cta} active={isNewGeneration} />
+              <ArrowRight className="w-4 h-4 text-[#FF6B00]" />
             </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleCopy(cta, 'cta')}
-              className="result-copy-btn py-1.5 px-3 border border-zinc-800 hover:border-zinc-700 rounded-lg text-xs"
-            >
-              {copiedSection === 'cta' ? (
-                <>
-                  <Check className="w-3 h-3 text-[#FF6B00]" />
-                  Copié
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3" />
-                  Copier
-                </>
-              )}
-            </button>
-            <div className="w-7 h-7 rounded-lg bg-orange-500/10 text-[#FF6B00] flex items-center justify-center border border-orange-500/10">
-              <ArrowRight className="w-4 h-4" />
-            </div>
-          </div>
-        </div>
+          }
+        />
 
-        {/* 6. SEO Meta Description */}
-        <div className="saas-card bento-col-3 bento-seo-card animate-slide-up delay-300">
-          <div className="result-card-header">
-            <span className="result-card-title">
-              <Globe className="w-4 h-4" />
-              Balise Meta Description (SEO)
-            </span>
-            <button
-              onClick={() => handleCopy(seoMeta, 'seo')}
-              className="result-copy-btn"
-              title="Copier la meta description"
-            >
-              {copiedSection === 'seo' ? (
-                <>
-                  <Check className="w-3 h-3 text-[#FF6B00]" />
-                  Copié
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3" />
-                  Copier
-                </>
-              )}
-            </button>
-          </div>
-          <p className="text-xs text-muted-foreground italic leading-relaxed border-l border-orange-500/30 pl-3">
-            <TypewrittenText text={seoMeta} active={isNewGeneration} />
-          </p>
-          <div className="flex items-center justify-between mt-3 text-[10px] text-muted-foreground font-medium">
-            <span>{seoMeta.length} caractères</span>
-            <span className="text-[#FF6B00] font-semibold">Conseillé : &lt; 160</span>
-          </div>
-        </div>
+        {/* 6. Meta Description SEO */}
+        <ResultCard
+          title="Meta Description SEO"
+          icon={<Globe className="w-4 h-4" />}
+          textToCopy={seoMeta}
+          delayClass="delay-350"
+          content={
+            <div>
+              <p className="result-card-content-seo">
+                <TypewrittenText text={seoMeta} active={isNewGeneration} />
+              </p>
+              <div className="result-card-footer-seo">
+                <span>{seoMeta.length} caractères</span>
+                <span className={seoMeta.length > 160 ? 'seo-char-count-alert' : ''}>
+                  Conseillé : &lt; 160
+                </span>
+              </div>
+            </div>
+          }
+        />
       </div>
     </div>
   );

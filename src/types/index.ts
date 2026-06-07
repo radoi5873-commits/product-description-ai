@@ -19,6 +19,10 @@ export interface GenerationResult {
   seoMeta: string;
 }
 
+export type ProviderOption = 'openai' | 'gemini';
+
 export interface AppSettings {
-  apiKey: string;
+  provider: ProviderOption;
+  openaiApiKey: string;
+  geminiApiKey: string;
 }
