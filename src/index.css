@@ -1937,8 +1937,8 @@ body {
 
 .pr-10 { padding-right: 2.5rem; }
 .right-3 { right: 0.75rem; }
-.top-1/2 { top: 50%; }
-.-translate-y-1/2 { transform: translateY(-50%); }
+.top-1\/2 { top: 50%; }
+.-translate-y-1\/2 { transform: translateY(-50%); }
 .absolute { position: absolute; }
 .relative { position: relative; }
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
