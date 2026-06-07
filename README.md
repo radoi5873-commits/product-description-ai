@@ -1,73 +1,89 @@
-# React + TypeScript + Vite
+# Product Description AI 🚀
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Un tableau de bord SaaS moderne et performant pour générer des descriptions de produits optimisées pour le SEO grâce à l'intelligence artificielle de Google Gemini.
 
-Currently, two official plugins are available:
+Ce projet transforme la création de fiches produits e-commerce en un processus automatisé, rapide et hautement personnalisable. Conçu avec une esthétique moderne haut de gamme (bento grid, effet frosted glass, animations fluides), il offre une expérience utilisateur exceptionnelle digne des meilleurs outils professionnels.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ✨ Fonctionnalités clés
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 📊 **Tableau de Bord Style Bento Grid** : Une mise en page responsive et dynamique qui organise le formulaire de génération, le résultat en temps réel et l'historique de manière optimale.
+- ⚙️ **Paramètres de Génération Avancés** :
+  - Choix du **ton** (professionnel, persuasif, décontracté, luxueux, humoristique, etc.).
+  - **Longueur du texte** (court, moyen, long).
+  - **Plateforme cible** (Shopify, Amazon, WooCommerce, Réseaux sociaux).
+  - **Langue de génération** (Français, Anglais, Espagnol, Allemand, Italien).
+  - **Optimisation SEO** : Ajout de mots-clés stratégiques pour un référencement naturel optimal.
+- 🕒 **Historique et Persistance** : Sauvegarde locale automatique (dans le `localStorage`) de vos générations précédentes, avec possibilité de les rechercher et de les charger instantanément depuis la barre latérale.
+- 📈 **Statistiques en Temps Réel** : Visualisez vos statistiques de production (nombre total de fiches générées, nombre total de mots générés, statut opérationnel du moteur Gemini).
+- 🎨 **Design & UX Premium** :
+  - Thème sombre et moderne avec dégradés soignés.
+  - Micro-animations, transitions fluides et effets de survol réactifs.
+  - Effet de confettis festif (`canvas-confetti`) lors de chaque génération réussie.
+  - Modale de configuration intégrée pour l'API Key.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ Stack Technique
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Framework** : React 19 (avec TypeScript)
+- **Outil de Build** : Vite
+- **Stylisation** : CSS Moderne (variables CSS, Flexbox, Grid, Glassmorphism, animations personnalisées)
+- **Icônes** : Lucide React
+- **Effets** : Canvas Confetti
+- **API d'Intelligence Artificielle** : Google Gemini API (`@google/generative-ai`)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🚀 Démarrage Rapide
+
+### Prérequis
+
+Assurez-vous d'avoir installé [Node.js](https://nodejs.org/) (version 18 ou supérieure recommandée) et `npm`.
+
+### Installation
+
+1. **Cloner le dépôt** :
+   ```bash
+   git clone <url-du-depot-github>
+   cd "Product Description AI"
+   ```
+
+2. **Installer les dépendances** :
+   ```bash
+   npm install
+   ```
+
+3. **Configurer la clé API Gemini** :
+   Pour utiliser la génération, vous aurez besoin d'une clé API Gemini. Vous pouvez l'obtenir gratuitement sur [Google AI Studio](https://aistudio.google.com/).
+   Deux manières de la configurer :
+   - **Dans le fichier d'environnement** : Créez un fichier `.env` à la racine du projet et ajoutez votre clé :
+     ```env
+     VITE_GEMINI_API_KEY=votre_cle_api_ici
+     ```
+   - **Depuis l'interface** : Cliquez sur le bouton "Paramètres" (icône engrenage) directement dans le tableau de bord pour saisir et sauvegarder votre clé de manière sécurisée dans votre navigateur.
+
+4. **Lancer le serveur de développement** :
+   ```bash
+   npm run dev
+   ```
+   L'application sera accessible par défaut à l'adresse [http://localhost:5173](http://localhost:5173).
+
+---
+
+## 📦 Construction pour la Production
+
+Pour compiler l'application de manière optimisée pour la production :
+
+```bash
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Les fichiers statiques générés seront placés dans le dossier `/dist`, prêts à être déployés sur des plateformes d'hébergement comme Vercel, Netlify, ou GitHub Pages.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 📄 Licence
+
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](./LICENSE) pour plus de détails.
