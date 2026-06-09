@@ -1,157 +1,100 @@
 import React from 'react';
-import { Sparkles, Plus, History, Settings, Trash2, ShieldCheck } from 'lucide-react';
-import type { GenerationResult } from '../types';
+import { LayoutDashboard, Sparkles, History, Settings } from 'lucide-react';
 
 interface SidebarProps {
-  history: GenerationResult[];
-  activeId: string | null;
-  onSelect: (id: string) => void;
-  onDelete: (id: string, e: React.MouseEvent) => void;
-  onNew: () => void;
-  onSettingsClick: () => void;
-  isOpen: boolean;
-  onClose: () => void;
-  provider: 'openai' | 'gemini';
-  apiConfigured: boolean;
+  activeTab: 'dashboard' | 'generator' | 'history' | 'settings';
+  setActiveTab: (tab: 'dashboard' | 'generator' | 'history' | 'settings') => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  history,
-  activeId,
-  onSelect,
-  onDelete,
-  onNew,
-  onSettingsClick,
-  isOpen,
-  onClose,
-  provider,
-  apiConfigured,
+  activeTab,
+  setActiveTab
 }) => {
   return (
-    <>
-      {/* Mobile Sidebar backdrop overlay */}
-      {isOpen && <div className="sidebar-backdrop" onClick={onClose} />}
-
-      <aside className={`sidebar-saas ${isOpen ? 'open' : ''}`}>
-        <div className="flex-col w-full h-full justify-between flex">
-          {/* Logo & New Button Section */}
-          <div>
-            <div className="flex items-center gap-2.5 px-1 py-2 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#FF6B00] to-[#FF8C39] flex items-center justify-center shadow-lg shadow-orange-500/10 shrink-0">
-                <Sparkles className="w-4.5 h-4.5 text-white" />
-              </div>
-              <span className="text-md font-extrabold tracking-tight text-foreground flex items-center gap-1">
-                Product Description <span className="text-[#FF6B00]">AI</span>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-orange-500/10 text-[8px] font-bold text-[#FF6B00] uppercase tracking-wider border border-orange-500/10 ml-1">
-                  SaaS
-                </span>
-              </span>
-            </div>
-
-            <button
-              onClick={() => {
-                onNew();
-                onClose();
-              }}
-              className="btn-saas btn-saas-primary w-full flex items-center justify-center gap-2 py-2.5"
-            >
-              <Plus className="w-4 h-4 text-inverse" />
-              Nouveau Produit
-            </button>
+    <aside className="w-64 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col justify-between p-4 shrink-0 min-h-[calc(100vh-3.5rem)]">
+      {/* Brand box & Nav Links */}
+      <div className="space-y-6">
+        {/* Brand Widget */}
+        <div className="flex items-center gap-3 p-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/40">
+          <div className="w-10 h-10 rounded-lg bg-[#A04E00] flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
-
-          {/* History Container Section */}
-          <div className="flex-1 flex flex-col min-h-0 mt-6">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-              <History className="w-3.5 h-3.5" />
-              Dernières générations
-            </div>
-            
-            <div className="sidebar-history-container">
-              {history.length === 0 ? (
-                <div className="text-xs text-muted-foreground/60 italic p-3 text-center">
-                  Aucun historique
-                </div>
-              ) : (
-                history.map((item) => {
-                  const date = new Date(item.timestamp);
-                  const formattedDate = date.toLocaleDateString('fr-FR', {
-                    day: '2-digit',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  });
-
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => {
-                        onSelect(item.id);
-                        onClose();
-                      }}
-                      className={`sidebar-history-item ${activeId === item.id ? 'active' : ''}`}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          onSelect(item.id);
-                          onClose();
-                        }
-                      }}
-                    >
-                      <div className="flex flex-col min-w-0 pr-2 flex-1">
-                        <span className="text-xs font-semibold text-foreground truncate w-full">
-                          {item.input.name}
-                        </span>
-                        <span className="text-[9px] text-muted-foreground mt-0.5">
-                          {formattedDate} • {item.input.category}
-                        </span>
-                      </div>
-                      
-                      <button
-                        onClick={(e) => onDelete(item.id, e)}
-                        className="sidebar-history-delete"
-                        title="Supprimer la fiche"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* Bottom Settings Section */}
-          <div className="border-t border-zinc-800/40 pt-4 mt-auto">
-            {/* Quick Engine Indicator */}
-            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/5 border border-white/5 mb-3">
-              <ShieldCheck className={`w-3.5 h-3.5 ${apiConfigured ? 'text-[#FF6B00]' : 'text-zinc-500'}`} />
-              <div className="flex flex-col">
-                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
-                  Moteur IA
-                </span>
-                <span className="text-[10px] font-semibold text-foreground">
-                  {apiConfigured
-                    ? (provider === 'openai' ? 'OpenAI Actif' : 'Gemini Actif')
-                    : 'Non configuré'}
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                onSettingsClick();
-                onClose();
-              }}
-              className="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
-            >
-              <Settings className="w-4 h-4" />
-              Configuration de l'API
-            </button>
+          <div className="flex flex-col min-w-0">
+            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate">
+              AIGenius Pro
+            </span>
+            <span className="text-[10px] text-zinc-500 truncate">
+              Suite Produit
+            </span>
           </div>
         </div>
-      </aside>
-    </>
+
+        {/* Navigation List */}
+        <nav className="space-y-1.5">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'dashboard'
+                ? 'bg-[#FF6B00] text-white shadow-lg shadow-orange-500/15'
+                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-100'
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Tableau de bord
+          </button>
+
+          <button
+            onClick={() => setActiveTab('generator')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'generator'
+                ? 'bg-[#FF6B00] text-white shadow-lg shadow-orange-500/15'
+                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-100'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            Générateur
+          </button>
+
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'history'
+                ? 'bg-[#FF6B00] text-white shadow-lg shadow-orange-500/15'
+                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-100'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            Historique
+          </button>
+
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'settings'
+                ? 'bg-[#FF6B00] text-white shadow-lg shadow-orange-500/15'
+                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-100'
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            Paramètres
+          </button>
+        </nav>
+      </div>
+
+      {/* Pro Plan Activation Card */}
+      <div className="p-4 rounded-2xl bg-[#FFF5EE] dark:bg-orange-950/20 border border-[#FFE4D0] dark:border-orange-900/30 flex flex-col gap-3">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-extrabold text-[#A04E00] dark:text-[#FFA15A] uppercase tracking-wider">
+            Passer au Pro
+          </span>
+          <span className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
+            Obtenez des générations illimitées et un accès API prioritaire.
+          </span>
+        </div>
+        <button className="w-full py-2 px-3 text-center text-xs font-bold text-white rounded-xl bg-[#8A3A00] hover:bg-[#6F2F00] transition-colors">
+          Mettre à niveau
+        </button>
+      </div>
+    </aside>
   );
 };

@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { 
   Copy, Check, Download, RotateCcw, 
   CheckCircle2, ArrowRight, Globe, FileText,
-  Heading, AlignLeft, ListChecks, MousePointerClick, Sparkles
+  Heading, AlignLeft, ListChecks, MousePointerClick, Sparkles,
+  Share2, Loader2, AlertCircle
 } from 'lucide-react';
-import type { GenerationResult } from '../types';
+import type { GenerationResult, AppSettings } from '../types';
 
 interface ResultDisplayProps {
   result: GenerationResult | null;
   onRegenerate: () => void;
   isNewGeneration: boolean;
+  settings?: AppSettings;
 }
 
 // 1. Machine à écrire animée
@@ -106,9 +108,12 @@ const ResultCard: React.FC<ResultCardProps> = ({
 export const ResultDisplay: React.FC<ResultDisplayProps> = ({ 
   result, 
   onRegenerate, 
-  isNewGeneration 
+  isNewGeneration,
+  settings
 }) => {
   const [copiedAll, setCopiedAll] = useState(false);
+  const [publishing, setPublishing] = useState<'shopify' | 'woocommerce' | null>(null);
+  const [publishStatus, setPublishStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   if (!result) {
     return (
@@ -167,8 +172,166 @@ ${benefits.map((b) => `- ${b}`).join('\n')}
     document.body.removeChild(link);
   };
 
+  const handlePublishShopify = async () => {
+    if (!settings?.shopifyShopUrl || !settings?.shopifyAccessToken) {
+      setPublishStatus({
+        type: 'error',
+        message: "Les identifiants Shopify ne sont pas configurés dans les paramètres."
+      });
+      return;
+    }
+
+    setPublishing('shopify');
+    setPublishStatus(null);
+
+    const shopUrl = settings.shopifyShopUrl.replace(/^(https?:\/\/)?/, 'https://').replace(/\/$/, '');
+    const endpoint = `${shopUrl}/admin/api/2023-10/products.json`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': settings.shopifyAccessToken
+        },
+        body: JSON.stringify({
+          product: {
+            title: title,
+            body_html: `<p>${shortDescription}</p><h3>Avantages</h3><ul>${benefits.map(b => `<li>${b}</li>`).join('')}</ul><h3>Description</h3><p>${longDescription}</p><p><strong>Appel à l'action:</strong> ${cta}</p>`,
+            product_type: result.input.category,
+            status: 'draft'
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Shopify HTTP ${response.status}`);
+      }
+
+      setPublishStatus({
+        type: 'success',
+        message: "Produit exporté avec succès comme brouillon sur Shopify !"
+      });
+    } catch (err: any) {
+      console.error(err);
+      
+      // Fallback: Download JSON
+      const shopifyJson = {
+        product: {
+          title: title,
+          body_html: `<p>${shortDescription}</p><h3>Avantages</h3><ul>${benefits.map(b => `<li>${b}</li>`).join('')}</ul><h3>Description</h3><p>${longDescription}</p>`,
+          product_type: result.input.category,
+          status: 'draft'
+        }
+      };
+      const blob = new Blob([JSON.stringify(shopifyJson, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${result.input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-shopify.json`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setPublishStatus({
+        type: 'error',
+        message: "CORS bloqué : Shopify rejette les appels direct du navigateur. Le fichier JSON Shopify a été téléchargé pour importation manuelle."
+      });
+    } finally {
+      setPublishing(null);
+    }
+  };
+
+  const handlePublishWoo = async () => {
+    if (!settings?.wooUrl || !settings?.wooConsumerKey || !settings?.wooConsumerSecret) {
+      setPublishStatus({
+        type: 'error',
+        message: "Les identifiants WooCommerce ne sont pas configurés dans les paramètres."
+      });
+      return;
+    }
+
+    setPublishing('woocommerce');
+    setPublishStatus(null);
+
+    const wooUrlBase = settings.wooUrl.replace(/^(https?:\/\/)?/, 'https://').replace(/\/$/, '');
+    const endpoint = `${wooUrlBase}/wp-json/wc/v3/products?consumer_key=${settings.wooConsumerKey}&consumer_secret=${settings.wooConsumerSecret}`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: title,
+          type: 'simple',
+          description: `<p>${longDescription}</p><h3>Avantages</h3><ul>${benefits.map(b => `<li>${b}</li>`).join('')}</ul>`,
+          short_description: shortDescription,
+          categories: [{ name: result.input.category }],
+          status: 'draft'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`WooCommerce HTTP ${response.status}`);
+      }
+
+      setPublishStatus({
+        type: 'success',
+        message: "Produit exporté avec succès comme brouillon sur WooCommerce !"
+      });
+    } catch (err: any) {
+      console.error(err);
+
+      // Fallback: Download JSON
+      const wooJson = {
+        name: title,
+        type: 'simple',
+        description: longDescription,
+        short_description: shortDescription,
+        status: 'draft'
+      };
+      const blob = new Blob([JSON.stringify(wooJson, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${result.input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-woocommerce.json`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setPublishStatus({
+        type: 'error',
+        message: "CORS bloqué : WooCommerce rejette les appels direct du navigateur. Le fichier JSON WooCommerce a été téléchargé pour importation manuelle."
+      });
+    } finally {
+      setPublishing(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Alert Status Banner */}
+      {publishStatus && (
+        <div className={`p-4 rounded-xl border flex items-start gap-3 text-xs font-semibold ${
+          publishStatus.type === 'success' 
+            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-250 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-400' 
+            : 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/30 text-amber-800 dark:text-amber-400'
+        }`}>
+          <AlertCircle className="w-4.5 h-4.5 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            {publishStatus.message}
+          </div>
+          <button 
+            onClick={() => setPublishStatus(null)} 
+            className="text-[10px] uppercase font-bold tracking-wider hover:opacity-75"
+          >
+            Fermer
+          </button>
+        </div>
+      )}
+
       {/* Barre d'action supérieure */}
       <div className="saas-card p-3 flex flex-wrap items-center justify-between gap-3 bg-zinc-950/40 backdrop-blur-md">
         <div className="flex items-center gap-2 pl-2">
@@ -176,7 +339,7 @@ ${benefits.map((b) => `- ${b}`).join('\n')}
           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Fiche Rédigée</span>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={onRegenerate}
             className="btn-saas btn-saas-secondary py-1.5 px-3 text-xs"
@@ -196,6 +359,42 @@ ${benefits.map((b) => `- ${b}`).join('\n')}
             <Download className="w-3.5 h-3.5" />
             Exporter .MD
           </button>
+
+          {/* Shopify Publish Button */}
+          {settings?.shopifyActive && (
+            <button
+              onClick={handlePublishShopify}
+              disabled={publishing !== null}
+              className="btn-saas btn-saas-secondary py-1.5 px-3 text-xs inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 border-emerald-250/50 dark:border-emerald-900/30 hover:bg-emerald-50/20"
+              style={{ width: 'auto' }}
+              title="Exporter vers Shopify"
+            >
+              {publishing === 'shopify' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Share2 className="w-3.5 h-3.5" />
+              )}
+              Shopify
+            </button>
+          )}
+
+          {/* WooCommerce Publish Button */}
+          {settings?.wooActive && (
+            <button
+              onClick={handlePublishWoo}
+              disabled={publishing !== null}
+              className="btn-saas btn-saas-secondary py-1.5 px-3 text-xs inline-flex items-center gap-1.5 text-purple-600 dark:text-purple-400 border-purple-200/50 dark:border-purple-900/30 hover:bg-purple-50/20"
+              style={{ width: 'auto' }}
+              title="Exporter vers WooCommerce"
+            >
+              {publishing === 'woocommerce' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Share2 className="w-3.5 h-3.5" />
+              )}
+              WooCommerce
+            </button>
+          )}
           
           <button
             onClick={handleCopyAll}

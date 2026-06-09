@@ -92,10 +92,56 @@ Ne retourne rien d'autre que du JSON. Pas de balises markdown de bloc de code, p
 
     const parsedData = safeParseJSON(textResponse);
     return buildPolishedResult(input, parsedData);
-  } else {
-    // Google Gemini API (v1 Stable Endpoint)
+  } else if (provider === 'anthropic') {
+    // Anthropic Messages API
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      'https://api.anthropic.com/v1/messages',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'dangerously-allow-html-headers': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 1500,
+          messages: [
+            {
+              role: 'user',
+              content: systemPrompt
+            }
+          ]
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let parsedError;
+      try {
+        parsedError = JSON.parse(errorText);
+      } catch {
+        // Ignorer
+      }
+      const message = parsedError?.error?.message || errorText;
+      throw new Error(`Erreur Anthropic : ${message}`);
+    }
+
+    const data = await response.json();
+    const textResponse = data.content?.[0]?.text;
+
+    if (!textResponse) {
+      throw new Error("Réponse vide de l'API Anthropic.");
+    }
+
+    const parsedData = safeParseJSON(textResponse);
+    return buildPolishedResult(input, parsedData);
+  } else {
+    // Google Gemini API (v1beta Endpoint - gemini-3.5-flash)
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {

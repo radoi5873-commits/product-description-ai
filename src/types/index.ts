@@ -19,10 +19,27 @@ export interface GenerationResult {
   seoMeta: string;
 }
 
-export type ProviderOption = 'openai' | 'gemini';
+export type ProviderOption = 'openai' | 'gemini' | 'anthropic';
 
 export interface AppSettings {
   provider: ProviderOption;
   openaiApiKey: string;
   geminiApiKey: string;
+  anthropicApiKey?: string;
+  fullName?: string;
+  email?: string;
+  avatarUrl?: string;
+  language?: string;
+  emailNotifications?: boolean;
+
+  // Shopify Integration Credentials
+  shopifyShopUrl?: string;
+  shopifyAccessToken?: string;
+  shopifyActive?: boolean;
+
+  // WooCommerce Integration Credentials
+  wooUrl?: string;
+  wooConsumerKey?: string;
+  wooConsumerSecret?: string;
+  wooActive?: boolean;
 }
