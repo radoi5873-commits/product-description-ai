@@ -235,7 +235,7 @@ ${benefits.map((b) => `- ${b}`).join('\n')}
 
       setPublishStatus({
         type: 'error',
-        message: "CORS bloqué : Shopify rejette les appels direct du navigateur. Le fichier JSON Shopify a été téléchargé pour importation manuelle."
+        message: "CORS bloqué : Shopify rejette les appels directs du navigateur. Le fichier JSON Shopify a été téléchargé pour importation manuelle."
       });
     } finally {
       setPublishing(null);
@@ -303,7 +303,7 @@ ${benefits.map((b) => `- ${b}`).join('\n')}
 
       setPublishStatus({
         type: 'error',
-        message: "CORS bloqué : WooCommerce rejette les appels direct du navigateur. Le fichier JSON WooCommerce a été téléchargé pour importation manuelle."
+        message: "CORS bloqué : WooCommerce rejette les appels directs du navigateur. Le fichier JSON WooCommerce a été téléchargé pour importation manuelle."
       });
     } finally {
       setPublishing(null);
